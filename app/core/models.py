@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import (AbstractBaseUser, UserManager,
-                                        PermissionsMixin)
+from django.contrib.auth.models import (
+                                        AbstractBaseUser, PermissionsMixin,
+                                        UserManager)
 from django.contrib.auth.hashers import make_password
 
 
