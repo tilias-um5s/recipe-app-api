@@ -22,7 +22,12 @@ services:
   
   db:
     image: postgres:11-alpine
+    volumes:
+      - recipe_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_DB=app
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=supersecretpassword
+
+volumes:
+  recipe_data:
