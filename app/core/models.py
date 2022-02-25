@@ -3,6 +3,7 @@ from django.contrib.auth.models import (
                                         AbstractBaseUser, PermissionsMixin,
                                         UserManager)
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 
 
 class CustomUserManager(UserManager):
@@ -37,3 +38,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class Tag(models.Model):
+    """Tag model for creating recipe tags"""
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
