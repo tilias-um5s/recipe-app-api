@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from rest_framework.validators import ValidationError
 from django.urls import reverse
 from django.test import TestCase
 
@@ -63,3 +64,24 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['name'], tag.name)
+
+    def test_creating_invalid_tags(self):
+        """Test creating invalid tags"""
+        payload = {'name': ''}
+
+        response = self.client.post(TAGS_LIST_URL, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRaises(ValidationError)
+
+    def test_create_tags_successful(self):
+        """Test creating tags successfully"""
+        payload = {'name': 'test tag'}
+
+        self.client.post(TAGS_LIST_URL, payload)
+
+        exists = Tag.objects.filter(
+            user=self.user,
+            name=payload['name'],
+        ).exists()
+
+        self.assertTrue(exists)
