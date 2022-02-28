@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from rest_framework.validators import ValidationError
 from rest_framework.test import APIClient
 from rest_framework import status
 
@@ -62,3 +63,25 @@ class PrivateIngredientsAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['name'], ingredient.name)
+
+    def test_create_invalid_ingredients(self):
+        """Test creating an invalid ingredient"""
+        payload = {'name': ''}
+        response = self.client.post(INGREDIENTS_LIST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertRaises(ValidationError)
+
+    def test_creating_ingredients_successful(self):
+        """Test creating valid new ingredients"""
+        payload = {'name': 'Eggs'}
+        response = self.client.post(INGREDIENTS_LIST_URL, payload)
+
+        exists = Ingredient.objects.filter(
+            user=self.user,
+            name=payload['name'],
+        ).exists()
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], payload['name'])
+        self.assertTrue(exists)
