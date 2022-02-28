@@ -64,3 +64,15 @@ class TestModel(TestCase):
         )
 
         self.assertEqual(str(ingredient), ingredient.name)
+
+    def test_recipe_str(self):
+        """Test the Recipe string representation"""
+        recipe = models.Recipe.objects.create(
+            # Required fields only
+            user=sample_user(),
+            title='Omlette',
+            time_minutes=5,
+            price=1.00
+        )
+
+        self.assertEqual(str(recipe), recipe.title)
