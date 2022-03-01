@@ -162,3 +162,53 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(ingredients.count(), 2)
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    def test_partial_updating_recipe(self):
+        """Test partial updating a recipe with patch"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='Curry')
+
+        payload = {'title': 'Chiken tikka', 'tags': [new_tag.id]}
+        url = recipe_detail_URL(recipe.id)
+        response = self.client.patch(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        recipe.refresh_from_db()
+
+        tags = recipe.tags.all()
+        self.assertEqual(tags.count(), 1)
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertIn(new_tag, tags)
+
+    def test_full_updating_recipe(self):
+        """Test full updating a recipe with put"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        recipe.ingredients.add(sample_ingredient(user=self.user))
+
+        new_tag = sample_tag(user=self.user, name='Healthy')
+        new_ingredient = sample_ingredient(user=self.user, name='Eggs')
+
+        payload = {
+            'title': 'Omelette',
+            'tags': [new_tag.id],
+            'ingredients': [new_ingredient.id],
+            'time_minutes': 20,
+            'price': 5.00,
+            'link': '',
+        }
+        url = recipe_detail_URL(recipe.id)
+        response = self.client.put(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        recipe.refresh_from_db()
+
+        tags = recipe.tags.all()
+        ingredients = recipe.ingredients.all()
+
+        self.assertEqual(tags.count(), 1)
+        self.assertIn(new_tag, tags)
+        self.assertEqual(ingredients.count(), 1)
+        self.assertIn(new_ingredient, ingredients)
+        self.assertEqual(recipe.title, payload['title'])
