@@ -5,6 +5,17 @@ from django.contrib.auth.models import (
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 
+import uuid
+import os
+
+
+def recipe_image_file_path(instance, filename):
+    """The recipe image file path"""
+    extension = filename.split('.')[-1]
+    filename = f'recipe_image_{uuid.uuid4()}.{extension}'
+
+    return os.path.join('uploads', 'recipe', filename)
+
 
 class CustomUserManager(UserManager):
 
@@ -76,6 +87,7 @@ class Recipe(models.Model):
     link = models.CharField(max_length=255, blank=True)
     ingredients = models.ManyToManyField('Ingredient')
     tags = models.ManyToManyField('Tag')
+    image = models.ImageField(null=True, upload_to=recipe_image_file_path)
 
     def __str__(self):
         return self.title
