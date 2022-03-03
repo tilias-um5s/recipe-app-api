@@ -224,6 +224,64 @@ class PrivateRecipeApiTests(TestCase):
         self.assertIn(new_ingredient, ingredients)
         self.assertEqual(recipe.title, payload['title'])
 
+    def test_filter_recipes_by_tags(self):
+        """Test filtering recipes by tags"""
+        recipe1 = sample_recipe(user=self.user, title='Cheezy Omelette')
+        recipe2 = sample_recipe(user=self.user, title='Pancake')
+        recipe3 = sample_recipe(user=self.user, title='Soup')
+
+        tag1 = sample_tag(user=self.user, name='High Protein')
+        tag2 = sample_tag(user=self.user, name='Healthy Breakfast')
+        tag3 = sample_tag(user=self.user, name='Light Soup')
+
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+        recipe3.tags.add(tag3)
+
+        response = self.client.get(
+            RECIPE_LIST_URL,
+            {'tags': f'{tag1.id},{tag2.id}'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        self.assertIn(serializer1.data, response.data)
+        self.assertIn(serializer2.data, response.data)
+        self.assertNotIn(serializer3.data, response.data)
+
+    def test_filter_recipe_by_ingredients(self):
+        """Test filtering recipe by ingredients"""
+        recipe1 = sample_recipe(user=self.user, title='Cheezy Omelette')
+        recipe2 = sample_recipe(user=self.user, title='Pancake')
+        recipe3 = sample_recipe(user=self.user, title='Soup')
+
+        ingredient1 = sample_ingredient(user=self.user, name='Eggs')
+        ingredient2 = sample_ingredient(user=self.user, name='Oats')
+        ingredient3 = sample_ingredient(user=self.user, name='Vegetables')
+
+        recipe1.ingredients.add(ingredient1)
+        recipe2.ingredients.add(ingredient2)
+        recipe3.ingredients.add(ingredient3)
+
+        response = self.client.get(
+            RECIPE_LIST_URL,
+            {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        self.assertIn(serializer1.data, response.data)
+        self.assertIn(serializer2.data, response.data)
+        self.assertNotIn(serializer3.data, response.data)
+
 
 class RecipeImageUploadTests(TestCase):
     """Test uploading an image to a recipe"""
@@ -251,7 +309,6 @@ class RecipeImageUploadTests(TestCase):
             img = Image.new('RGB', (10, 10))
             img.save(ntf, 'JPEG')
             ntf.seek(0)
-            print(ntf.name)
             payload = {'image': ntf}
             response = self.client.post(url, payload, format='multipart')
 
