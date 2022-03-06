@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.validators import ValidationError
 
-from core.models import Tag
+from core.models import Tag, Recipe
 from recipe.serializers import TagSerializer
 
 
@@ -85,3 +85,48 @@ class PrivateTagsApiTests(TestCase):
         ).exists()
 
         self.assertTrue(exists)
+    
+    def test_retrieve_tags_assigned_to_recipes(self):
+        """Test filtering tags by those assigned to recipes"""
+        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title='Pancake and Omelette',
+            time_minutes=20,
+            price=2.00
+        )
+        recipe.tags.add(tag1)
+
+        tag2 = Tag.objects.create(user=self.user, name='Lunch')
+
+        response = self.client.get(TAGS_LIST_URL, {'assigned_only': 1})
+
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+
+        self.assertIn(serializer1.data, response.data)
+        self.assertNotIn(serializer2.data, response.data)
+
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+        tag = Tag.objects.create(user=self.user, name='Breakfast')
+        Tag.objects.create(user=self.user, name='Lunch')
+
+        recipe1 = Recipe.objects.create(
+            user=self.user,
+            title='Omellete',
+            time_minutes=20,
+            price=2.00,
+        )
+        recipe2 = Recipe.objects.create(
+            user=self.user,
+            title='Pancake',
+            time_minutes=20,
+            price=2.00
+        )
+        recipe1.tags.add(tag)
+        recipe2.tags.add(tag)
+
+        response = self.client.get(TAGS_LIST_URL, {'assigned_only': 1})
+
+        self.assertEqual(len(response.data), 1)
